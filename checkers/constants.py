@@ -1,14 +1,29 @@
 import pygame
 
-WIDTH, HEIGHT = 800, 800
-ROWS, COLS = 8, 8
-SQUARE_SIZE = WIDTH // COLS
+pygame.init()
 
-# RGB colors
+# Характеристики дошки
+WIDTH, HEIGHT = 1000, 800
+ROWS, COLS = 8, 8
+SQUARE_SIZE = 100
+DIFFICULTY = 4
+
+# RGB кольори
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
+BEIGE = (189, 169, 153)
 BLACK = (0, 0, 0)
+BROWN = (79, 42, 15)
 BLUE = (0, 0, 255)
 GRAY = (128, 128, 128)
+GREEN = (0, 255, 0)
 
+FONT = pygame.font.SysFont("Arial", 30, bold=True)
+
+# Зображення
 CROWN = pygame.transform.scale(pygame.image.load("assets/crown.png"), (44, 25))
+RESTART = (pygame.transform.scale(pygame.image.load("assets/restart.png"), (100, 100)), 850, 100)
+HOME = (pygame.transform.scale(pygame.image.load("assets/home.png"), (100, 100)), 850, 250)
+AI = (pygame.transform.scale(pygame.image.load("assets/AI.png"), (100, 100)), 850, 400)
+PLAYER = (pygame.transform.scale(pygame.image.load("assets/second_player.png"), (100, 100)), 850, 400)
+BACKGROUND = pygame.transform.scale(pygame.image.load("assets/background.png"), (200, 800))

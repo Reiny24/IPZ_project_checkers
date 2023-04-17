@@ -1,21 +1,56 @@
-import pygame
-from .constants import BLACK, ROWS, RED, SQUARE_SIZE, COLS, WHITE
+from .constants import *
 from .piece import Piece
 
-
-def draw_squares(win):
-    win.fill(BLACK)
-    for row in range(ROWS):
-        for col in range(row % 2, COLS, 2):
-            pygame.draw.rect(win, RED, (row * SQUARE_SIZE, col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+pygame.init()
 
 
 class Board:
     def __init__(self):
         self.board = []
-        self.red_left = self.white_left = 12
-        self.red_kings = self.white_kings = 0
+        self.white_left = self.black_left = 12
+        self.white_kings = self.black_kings = 0
         self.create_board()
+
+    @staticmethod
+    def draw_squares(win):
+        """Розмітка ігрового поля на квадрати"""
+        win.fill(BROWN)
+        win.blit(BACKGROUND, (800, 0))
+        win.blit(RESTART[0], (RESTART[1], RESTART[2]))
+        win.blit(HOME[0], (HOME[1], HOME[2]))
+
+        pygame.draw.rect(win, GRAY, (800, 600, 200, 200))
+        pygame.draw.circle(win, WHITE, (875, 675), 25)
+        pygame.draw.circle(win, BLACK, (875, 750), 25)
+        for row in range(ROWS):
+            for col in range(row % 2, COLS, 2):
+                pygame.draw.rect(win, BEIGE, (row * SQUARE_SIZE, col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
+    @staticmethod
+    def draw_player(win, player):
+        if player:
+            win.blit(PLAYER[0], (PLAYER[1], PLAYER[2]))
+        else:
+            win.blit(AI[0], (AI[1], AI[2]))
+
+    @staticmethod
+    def update_button(win):
+        pygame.draw.rect(win, GRAY, (RESTART[1], RESTART[2], 100, 100))
+
+    @staticmethod
+    def draw_winner(win):
+        pygame.draw.rect(win, GRAY, (800, 600, 100, 100))
+
+    def evaluate(self):
+        return self.black_left - self.white_left + (self.black_kings * 0.5 - self.white_kings * 0.5)
+
+    def get_all_pieces(self, color):
+        pieces = []
+        for row in self.board:
+            for piece in row:
+                if piece != 0 and piece.color == color:
+                    pieces.append(piece)
+        return pieces
 
     def move(self, piece, row, col):
         self.board[piece.row][piece.col], self.board[row][col] = self.board[row][col], self.board[piece.row][piece.col]
@@ -23,10 +58,10 @@ class Board:
 
         if row == ROWS - 1 or row == 0:
             piece.make_king()
-            if piece.color == WHITE:
-                self.white_kings += 1
+            if piece.color == BLACK:
+                self.black_kings += 1
             else:
-                self.red_kings += 1
+                self.white_kings += 1
 
     def get_piece(self, row, col):
         return self.board[row][col]
@@ -37,16 +72,17 @@ class Board:
             for col in range(COLS):
                 if col % 2 == ((row + 1) % 2):
                     if row < 3:
-                        self.board[row].append(Piece(row, col, WHITE))
+                        self.board[row].append(Piece(row, col, BLACK))
                     elif row > 4:
-                        self.board[row].append(Piece(row, col, RED))
+                        self.board[row].append(Piece(row, col, WHITE))
                     else:
                         self.board[row].append(0)
                 else:
                     self.board[row].append(0)
 
-    def draw(self, win):
-        draw_squares(win)
+    def draw(self, win, player):
+        self.draw_squares(win)
+        self.draw_player(win, player)
         for row in range(ROWS):
             for col in range(COLS):
                 piece = self.board[row][col]
@@ -57,29 +93,30 @@ class Board:
         for piece in pieces:
             self.board[piece.row][piece.col] = 0
             if piece != 0:
-                if piece.color == RED:
-                    self.red_left -= 1
-                else:
+                if piece.color == WHITE:
                     self.white_left -= 1
+                else:
+                    self.black_left -= 1
 
     def winner(self):
-        if self.red_left <= 0:
+        """Повертає переможця гри"""
+        if self.white_left <= 0:
+            return BLACK
+        elif self.black_left <= 0:
             return WHITE
-        elif self.white_left <= 0:
-            return RED
-
         return None
 
     def get_valid_moves(self, piece):
+        """Повертає доступні ходи для обраної шашки"""
         moves = {}
         left = piece.col - 1
         right = piece.col + 1
         row = piece.row
 
-        if piece.color == RED or piece.king:
+        if piece.color == WHITE or piece.king:
             moves.update(self._traverse_left(row - 1, max(row - 3, -1), -1, piece.color, left))
             moves.update(self._traverse_right(row - 1, max(row - 3, -1), -1, piece.color, right))
-        if piece.color == WHITE or piece.king:
+        if piece.color == BLACK or piece.king:
             moves.update(self._traverse_left(row + 1, min(row + 3, ROWS), 1, piece.color, left))
             moves.update(self._traverse_right(row + 1, min(row + 3, ROWS), 1, piece.color, right))
 

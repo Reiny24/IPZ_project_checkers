@@ -1,10 +1,10 @@
-from .constants import SQUARE_SIZE, GRAY, CROWN
+from .constants import *
 import pygame
 
 
 class Piece:
-    PADDING = 15
-    OUTLINE = 2
+    PADDING = 20
+    OUTLINE = 5
 
     def __init__(self, row, col, color):
         self.row = row
