@@ -18,6 +18,7 @@ class Board:
         win.blit(BACKGROUND, (800, 0))
         win.blit(RESTART[0], (RESTART[1], RESTART[2]))
         win.blit(HOME[0], (HOME[1], HOME[2]))
+        win.blit(SAVE[0], (SAVE[1], SAVE[2]))
 
         pygame.draw.rect(win, GRAY, (800, 600, 200, 200))
         pygame.draw.circle(win, WHITE, (875, 675), 25)
@@ -25,13 +26,6 @@ class Board:
         for row in range(ROWS):
             for col in range(row % 2, COLS, 2):
                 pygame.draw.rect(win, BEIGE, (row * SQUARE_SIZE, col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-
-    @staticmethod
-    def draw_player(win, player):
-        if player:
-            win.blit(PLAYER[0], (PLAYER[1], PLAYER[2]))
-        else:
-            win.blit(AI[0], (AI[1], AI[2]))
 
     @staticmethod
     def update_button(win):
@@ -80,9 +74,8 @@ class Board:
                 else:
                     self.board[row].append(0)
 
-    def draw(self, win, player):
+    def draw(self, win):
         self.draw_squares(win)
-        self.draw_player(win, player)
         for row in range(ROWS):
             for col in range(COLS):
                 piece = self.board[row][col]
