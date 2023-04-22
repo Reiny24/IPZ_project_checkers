@@ -1,5 +1,4 @@
 import pygame
-import tkinter as tk
 
 pygame.init()
 
@@ -12,13 +11,14 @@ DIFFICULTY = 4
 # RGB кольори
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)
-BEIGE = (189, 169, 153)
+BEIGE = (222, 200, 170)
 BLACK = (0, 0, 0)
 BROWN = (79, 42, 15)
 BLUE = (0, 0, 255)
-GRAY = (128, 128, 128)
+GRAY = (140, 140, 140)
 GREEN = (0, 255, 0)
 
+BIG_FONT = pygame.font.SysFont("Arial", 45, bold=True)
 FONT = pygame.font.SysFont("Arial", 30, bold=True)
 
 # Зображення

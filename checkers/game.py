@@ -4,7 +4,6 @@ from .constants import *
 from checkers.board import Board
 import os
 
-
 class Game:
     def __init__(self, win):
         self.board = None
@@ -20,15 +19,24 @@ class Game:
 
     def main_screen(self):
         self.win.blit(HOME_BACKGROUND[0], (HOME_BACKGROUND[1], HOME_BACKGROUND[2]))  # Background
-        self.button(100, (200, 150), (800, 150), (200, 50), "Interactive board for checkers", (325, 130))  # Title
+        self.button_frame(105,(200, 150), (800, 150), (200, 45))  # Frames for buttons
+        self.button_frame(55, (350, 350), (650, 350), (350, 295))
+        self.button_frame(55, (350, 475), (650, 475), (350, 420))
+        self.button_frame(55, (350, 600), (650, 600), (350, 545))
+        self.button_frame(55, (350, 725), (650, 725), (350, 670))
+        self.button(100,(200, 150), (800, 150), (200, 50), "Interactive game board for checkers", (285, 130))  # Title
         self.button(50, (350, 350), (650, 350), (350, 300), "New game", (445, 330))  # New game
         self.button(50, (350, 475), (650, 475), (350, 425), "Load game", (435, 455))  # Load game
-        self.button(50, (350, 600), (650, 600), (350, 550), "Information (Inactive)", (435, 580))  # Information
+        self.button(50, (350, 600), (650, 600), (350, 550), "Information (In progress)", (435, 580))  # Information
         self.button(50, (350, 725), (650, 725), (350, 675), "Quit", (470, 705))  # Quit
         pygame.display.update()
 
     def choose_mode(self):
         self.win.blit(HOME_BACKGROUND[0], (HOME_BACKGROUND[1], HOME_BACKGROUND[2]))  # Background
+        self.button_frame(105, (200, 150), (800, 150), (200, 45))
+        self.button_frame(55, (350, 350), (650, 350), (350, 295))
+        self.button_frame(55, (350, 475), (650, 475), (350, 420))
+        self.button_frame(55, (350, 600), (650, 600), (350, 545))
         self.button(100, (200, 150), (800, 150), (200, 50), "New game", (445, 130))  # Title
         self.button(50, (350, 350), (650, 350), (350, 300), "Player vs Player", (405, 330))  # Player vs Player
         self.button(50, (350, 475), (650, 475), (350, 425), "Player vs AI", (425, 455))  # Player vs AI
@@ -58,6 +66,11 @@ class Game:
         pygame.draw.circle(self.win, BLACK, pos2, radius)
         pygame.draw.rect(self.win, BLACK, (pos3[0], pos3[1], pos2[0] - pos1[0], 2 * radius))
         self.draw_text(text, FONT, WHITE, text_pos[0], text_pos[1])
+
+    def button_frame(self, radius, pos1, pos2, pos3):
+        pygame.draw.circle(self.win, WHITE, pos1, radius)
+        pygame.draw.circle(self.win, WHITE, pos2, radius)
+        pygame.draw.rect(self.win, WHITE, (pos3[0], pos3[1], pos2[0] - pos1[0], 2 * radius))
 
     def update(self):
         self.board.draw(self.win)
