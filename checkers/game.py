@@ -1,6 +1,8 @@
+import numpy
 import pygame.display
 from .constants import *
 from checkers.board import Board
+import os
 
 
 class Game:
@@ -12,12 +14,15 @@ class Game:
         self.valid_moves = None
         self._init()
         self.win = win
+        self.saved = False
+        self.filename = None
+        self.delay = 0
 
     def main_screen(self):
         self.win.blit(HOME_BACKGROUND[0], (HOME_BACKGROUND[1], HOME_BACKGROUND[2]))  # Background
         self.button(100, (200, 150), (800, 150), (200, 50), "Interactive board for checkers", (325, 130))  # Title
         self.button(50, (350, 350), (650, 350), (350, 300), "New game", (445, 330))  # New game
-        self.button(50, (350, 475), (650, 475), (350, 425), "Load game (Inactive)", (435, 455))  # Load game
+        self.button(50, (350, 475), (650, 475), (350, 425), "Load game", (435, 455))  # Load game
         self.button(50, (350, 600), (650, 600), (350, 550), "Information (Inactive)", (435, 580))  # Information
         self.button(50, (350, 725), (650, 725), (350, 675), "Quit", (470, 705))  # Quit
         pygame.display.update()
@@ -25,9 +30,27 @@ class Game:
     def choose_mode(self):
         self.win.blit(HOME_BACKGROUND[0], (HOME_BACKGROUND[1], HOME_BACKGROUND[2]))  # Background
         self.button(100, (200, 150), (800, 150), (200, 50), "New game", (445, 130))  # Title
-        self.button(50, (350, 350), (650, 350), (350, 300), "Player vs Player", (405, 330))  # New game
-        self.button(50, (350, 475), (650, 475), (350, 425), "Player vs AI", (425, 455))  # Load game
-        self.button(50, (350, 600), (650, 600), (350, 550), "Back", (470, 580))  # Information
+        self.button(50, (350, 350), (650, 350), (350, 300), "Player vs Player", (405, 330))  # Player vs Player
+        self.button(50, (350, 475), (650, 475), (350, 425), "Player vs AI", (425, 455))  # Player vs AI
+        self.button(50, (350, 600), (650, 600), (350, 550), "Back", (470, 580))  # Back
+        pygame.display.update()
+
+    def choose_save(self):
+        self.win.blit(HOME_BACKGROUND[0], (HOME_BACKGROUND[1], HOME_BACKGROUND[2]))  # Background
+        pygame.draw.rect(self.win, BLACK, (200, 200, 600, 330))
+        row = 220
+        col = 220
+        for i in os.listdir(r"./saved_games"):
+            self.draw_text(i, FONT, WHITE, row, col)
+            col += 50
+            if col == 520:
+                row += 150
+                col = 220
+            if row == 820:
+                pygame.draw.circle(self.win, WHITE, (900, 400), 49)
+                self.win.blit(RIGHT, (850, 350))
+
+        self.button(50, (350, 600), (650, 600), (350, 550), "Back", (470, 580))  # Back
         pygame.display.update()
 
     def button(self, radius, pos1, pos2, pos3, text, text_pos):
@@ -37,7 +60,7 @@ class Game:
         self.draw_text(text, FONT, WHITE, text_pos[0], text_pos[1])
 
     def update(self):
-        self.board.draw(self.win, self.second_player)
+        self.board.draw(self.win)
         self.draw_valid_moves(self.valid_moves)
         if self.turn == WHITE:
             self.draw_text("WHITE TURN", FONT, WHITE, 820, 600)
@@ -47,7 +70,15 @@ class Game:
         self.draw_text(str(12 - self.board.black_left), FONT, BLACK, 925, 735)
         self.draw_text("RESTART", FONT, BLACK, 845, 200)
         self.draw_text("HOME", FONT, BLACK, 865, 350)
-        self.draw_text("SAVE GAME", FONT, BLACK, 830, 500)
+        if not self.saved:
+            self.draw_text("SAVE GAME", FONT, BLACK, 830, 500)
+        else:
+            self.draw_text("SAVED AS", FONT, BLACK, 840, 500)
+            self.draw_text(str(self.filename), FONT, BLACK, 855, 540)
+            self.delay += 1
+            if self.delay == 300:
+                self.saved = False
+                self.delay = 0
         pygame.display.update()
 
     def _init(self):
@@ -60,11 +91,35 @@ class Game:
         self._init()
 
     def save(self):
-        with open("saved_game.txt", "w") as file:
+        import numpy
+        self.filename = "Save_" + str(len(os.listdir(r".\saved_games")))
+        os.mkdir(fr".\saved_games\{self.filename}")
+        numpy.save(fr".\saved_games\{self.filename}\{self.filename}.npy", self.board.board, allow_pickle=True)
+        with open(fr".\saved_games\{self.filename}\{self.filename}", "w") as file:
             file.write(
-                "{}\n{}\n{}\n{}\n{}\n{}\n{}".format(self.board.board, self.board.white_left, self.board.black_left,
-                                                    self.board.white_kings, self.board.black_kings, self.second_player,
-                                                    self.turn))
+                "{}\n{}\n{}\n{}\n{}\n{}".format(self.board.white_left, self.board.black_left,
+                                                self.board.white_kings, self.board.black_kings, self.second_player,
+                                                self.turn[0]))
+        self.saved = True
+
+    def load_game(self):
+        if len(os.listdir(r".\saved_games")) > 0:
+            self.filename = "Save_" + str(len(os.listdir(r".\saved_games")) - 1)
+            print(self.filename)
+            with open(fr".\saved_games\{self.filename}\{self.filename}", "r") as file:
+                data = file.read().split("\n")
+
+            self.board.board = numpy.load(fr".\saved_games\{self.filename}\{self.filename}.npy", allow_pickle=True)
+            self.board.white_left = int(data[0])
+            self.board.black_left = int(data[1])
+            self.board.white_kings = int(data[2])
+            self.board.black_kings = int(data[3])
+            self.second_player = data[4] in ["True"]
+            print(self.second_player)
+            if data[5] == "255":
+                self.turn = WHITE
+            else:
+                self.turn = BLACK
 
     def select(self, row, col):
         if self.selected:

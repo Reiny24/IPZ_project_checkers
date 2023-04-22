@@ -1,4 +1,5 @@
 import pygame
+import tkinter as tk
 
 pygame.init()
 
@@ -29,3 +30,4 @@ PLAYER = (pygame.transform.scale(pygame.image.load("assets/second_player.png"), 
 BACKGROUND = pygame.transform.scale(pygame.image.load("assets/background.png"), (200, 800))
 HOME_BACKGROUND = (pygame.transform.scale(pygame.image.load("assets/home_background.png"), (1000, 800)), 0, 0)
 SAVE = (pygame.transform.scale(pygame.image.load("assets/save.png"), (100, 100)), 850, 400)
+RIGHT = pygame.transform.scale(pygame.image.load("assets/arrow.png"), (100, 100))
