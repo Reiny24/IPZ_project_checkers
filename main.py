@@ -26,6 +26,10 @@ def main():
     home = True
     choose_mode = False
     choose_save = False
+    left = False
+    right = False
+    x, y = None, None
+    choose = False
 
     while run:
         clock.tick(FPS)
@@ -60,7 +64,6 @@ def main():
                             home = False
                             choose_mode = True
                         elif 300 <= row <= 700 and 425 <= col <= 525:  # Load game
-                            game.choose_save()
                             # game.load_game()
                             home = False
                             choose_save = True
@@ -77,17 +80,35 @@ def main():
                             home = True
                             choose_mode = False
                     elif choose_save:
-                        if 300 <= row <= 700 and 550 <= col <= 650:  # Back
+                        if 300 <= row <= 700 and 675 <= col <= 775:  # Back
                             home = True
                             choose_save = False
+                            x, y = None, None
+                        elif 850 <= row <= 950 and 350 <= col <= 450:
+                            right = True
+                            left = False
+                            x, y = None, None
+                        elif 50 <= row <= 150 and 350 <= col <= 450:
+                            right = False
+                            left = True
+                            x, y = None, None
+                        elif 150 <= row < 850 and 275 <= col < 525:
+                            x, y = (row - 150) // 140, (col - 275) // 62
+                        elif 350 <= row <= 650 and 550 <= col <= 650 and x is not None:
+                            choose = True
 
-        pygame.display.update()
         if home:
             game.main_screen()
         elif choose_mode:
             game.choose_mode()
         elif choose_save:
-            game.choose_save()
+            game.choose_save(left, right, x, y, choose)
+            left = False
+            right = False
+            if choose:
+                choose_save = False
+                choose = False
+                x = None
         else:
             game.update()
 

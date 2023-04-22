@@ -18,8 +18,9 @@ BLUE = (0, 0, 255)
 GRAY = (140, 140, 140)
 GREEN = (0, 255, 0)
 
-BIG_FONT = pygame.font.SysFont("Arial", 45, bold=True)
+BUTT_FONT = pygame.font.SysFont("Arial", 45, bold=True)
 FONT = pygame.font.SysFont("Arial", 30, bold=True)
+BIG_FONT = pygame.font.SysFont("Arial", 55, bold=True)
 
 # Зображення
 CROWN = pygame.transform.scale(pygame.image.load("assets/crown.png"), (44, 25))
@@ -31,3 +32,4 @@ BACKGROUND = pygame.transform.scale(pygame.image.load("assets/background.png"), 
 HOME_BACKGROUND = (pygame.transform.scale(pygame.image.load("assets/home_background.png"), (1000, 800)), 0, 0)
 SAVE = (pygame.transform.scale(pygame.image.load("assets/save.png"), (100, 100)), 850, 400)
 RIGHT = pygame.transform.scale(pygame.image.load("assets/arrow.png"), (100, 100))
+LEFT = pygame.transform.rotate(pygame.transform.scale(pygame.image.load("assets/arrow.png"), (100, 100)), 180)

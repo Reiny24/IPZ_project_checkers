@@ -16,6 +16,9 @@ class Game:
         self.saved = False
         self.filename = None
         self.delay = 0
+        self.page = 0
+        # self.right = False
+        # self.left = False
 
     def main_screen(self):
         self.win.blit(HOME_BACKGROUND[0], (HOME_BACKGROUND[1], HOME_BACKGROUND[2]))  # Background
@@ -24,11 +27,11 @@ class Game:
         self.button_frame(55, (350, 475), (650, 475), (350, 420))
         self.button_frame(55, (350, 600), (650, 600), (350, 545))
         self.button_frame(55, (350, 725), (650, 725), (350, 670))
-        self.button(100,(200, 150), (800, 150), (200, 50), "Interactive game board for checkers", (285, 130))  # Title
-        self.button(50, (350, 350), (650, 350), (350, 300), "New game", (445, 330))  # New game
-        self.button(50, (350, 475), (650, 475), (350, 425), "Load game", (435, 455))  # Load game
-        self.button(50, (350, 600), (650, 600), (350, 550), "Information (In progress)", (435, 580))  # Information
-        self.button(50, (350, 725), (650, 725), (350, 675), "Quit", (470, 705))  # Quit
+        self.button(100,(200, 150), (800, 150), (200, 50), "Interactive board for checkers", (185, 120), BIG_FONT)  # Title
+        self.button(50, (350, 350), (650, 350), (350, 300), "New game", (410, 320), BUTT_FONT)  # New game
+        self.button(50, (350, 475), (650, 475), (350, 425), "Load game", (405, 445), BUTT_FONT)  # Load game
+        self.button(50, (350, 600), (650, 600), (350, 550), "Information", (400, 570), BUTT_FONT)  # Information
+        self.button(50, (350, 725), (650, 725), (350, 675), "Quit", (455, 700), BUTT_FONT)  # Quit
         pygame.display.update()
 
     def choose_mode(self):
@@ -37,35 +40,80 @@ class Game:
         self.button_frame(55, (350, 350), (650, 350), (350, 295))
         self.button_frame(55, (350, 475), (650, 475), (350, 420))
         self.button_frame(55, (350, 600), (650, 600), (350, 545))
-        self.button(100, (200, 150), (800, 150), (200, 50), "New game", (445, 130))  # Title
-        self.button(50, (350, 350), (650, 350), (350, 300), "Player vs Player", (405, 330))  # Player vs Player
-        self.button(50, (350, 475), (650, 475), (350, 425), "Player vs AI", (425, 455))  # Player vs AI
-        self.button(50, (350, 600), (650, 600), (350, 550), "Back", (470, 580))  # Back
+        self.button(100, (200, 150), (800, 150), (200, 50), "New game", (400, 120), BIG_FONT)  # Title
+        self.button(50, (350, 350), (650, 350), (350, 300), "Player vs Player", (360, 320), BUTT_FONT)  # Player vs Player
+        self.button(50, (350, 475), (650, 475), (350, 425), "Player vs AI", (395, 445), BUTT_FONT)  # Player vs AI
+        self.button(50, (350, 600), (650, 600), (350, 550), "Back", (455, 570), BUTT_FONT)  # Back
         pygame.display.update()
 
-    def choose_save(self):
+    def choose_save(self, left, right, x, y, choose):
         self.win.blit(HOME_BACKGROUND[0], (HOME_BACKGROUND[1], HOME_BACKGROUND[2]))  # Background
-        pygame.draw.rect(self.win, BLACK, (200, 200, 600, 330))
-        row = 220
-        col = 220
-        for i in os.listdir(r"./saved_games"):
-            self.draw_text(i, FONT, WHITE, row, col)
-            col += 50
-            if col == 520:
-                row += 150
-                col = 220
-            if row == 820:
-                pygame.draw.circle(self.win, WHITE, (900, 400), 49)
-                self.win.blit(RIGHT, (850, 350))
+        self.button_frame(105, (200, 150), (800, 150), (200, 45))
+        self.button(100, (200, 150), (800, 150), (200, 50), "Choose your save", (300, 120), BIG_FONT)  # Title
+        pygame.draw.rect(self.win, WHITE, (145, 270, 710, 260))
+        pygame.draw.rect(self.win, BLACK, (150, 275, 700, 250))
+        length, pos = 0, 0
+        arr = [[]]
+        for i in os.listdir(r"./Saved_games"):
+            if length <= 20:
+                arr[pos].append(i)
+                length += 1
+            if length == 20:
+                arr.append([])
+                length = 0
+                pos += 1
 
-        self.button(50, (350, 600), (650, 600), (350, 550), "Back", (470, 580))  # Back
+        if right and self.page < len(arr) - 1:
+            self.page += 1
+        elif left and self.page > 0:
+            self.page -= 1
+
+        if self.page < len(arr) - 1:
+            pygame.draw.circle(self.win, WHITE, (900, 400), 49)
+            self.win.blit(RIGHT, (850, 350))
+        if self.page > 0:
+            pygame.draw.circle(self.win, WHITE, (100, 400), 49)
+            self.win.blit(LEFT, (50, 350))
+
+        row, col = 170, 295
+        for i in arr[self.page]:
+            self.draw_text(i, FONT, WHITE, row, col)
+            col += 60
+            if col == 535:
+                row += 140
+                col = 295
+
+        row, col = 0, 0
+        save_arr = [[]]
+        for i in arr[self.page]:
+            save_arr[row].append(i)
+            col += 1
+            if col == 4:
+                save_arr.append([])
+                row += 1
+                col = 0
+
+        if x is not None:
+            if x <= len(save_arr) - 1:
+                if y <= len(save_arr[x]) - 1:
+                    pygame.draw.rect(self.win, WHITE, (150 + x * 140, 275 + y * 62, 140, 10))
+                    pygame.draw.rect(self.win, WHITE, (150 + x * 140, 329 + y * 62, 140, 10))
+                    pygame.draw.rect(self.win, WHITE, (150 + x * 140, 275 + y * 62, 10, 54))
+                    pygame.draw.rect(self.win, WHITE, (280 + x * 140, 275 + y * 62, 10, 54))
+                    self.button_frame(55, (350, 600), (650, 600), (340, 545))
+                    self.button(50, (350, 600), (650, 600), (350, 550), "Load selected", (375, 570), BUTT_FONT)
+
+        if choose:
+            self.load_game(save_arr[x][y])
+        self.button_frame(55, (350, 725), (650, 725), (340, 670))
+        self.button(50, (350, 725), (650, 725), (350, 675), "Back", (450, 695), BUTT_FONT)  # Back
         pygame.display.update()
 
-    def button(self, radius, pos1, pos2, pos3, text, text_pos):
+    def button(self, radius, pos1, pos2, pos3, text, text_pos, font):
         pygame.draw.circle(self.win, BLACK, pos1, radius)
         pygame.draw.circle(self.win, BLACK, pos2, radius)
         pygame.draw.rect(self.win, BLACK, (pos3[0], pos3[1], pos2[0] - pos1[0], 2 * radius))
-        self.draw_text(text, FONT, WHITE, text_pos[0], text_pos[1])
+        self.draw_text(text, font, WHITE, text_pos[0], text_pos[1])
 
     def button_frame(self, radius, pos1, pos2, pos3):
         pygame.draw.circle(self.win, WHITE, pos1, radius)
@@ -115,20 +163,18 @@ class Game:
                                                 self.turn[0]))
         self.saved = True
 
-    def load_game(self):
+    def load_game(self, saved_game):
         if len(os.listdir(r".\saved_games")) > 0:
-            self.filename = "Save_" + str(len(os.listdir(r".\saved_games")) - 1)
-            print(self.filename)
-            with open(fr".\saved_games\{self.filename}\{self.filename}", "r") as file:
+            print(saved_game)
+            with open(fr".\saved_games\{saved_game}\{saved_game}", "r") as file:
                 data = file.read().split("\n")
 
-            self.board.board = numpy.load(fr".\saved_games\{self.filename}\{self.filename}.npy", allow_pickle=True)
+            self.board.board = numpy.load(fr".\saved_games\{saved_game}\{saved_game}.npy", allow_pickle=True)
             self.board.white_left = int(data[0])
             self.board.black_left = int(data[1])
             self.board.white_kings = int(data[2])
             self.board.black_kings = int(data[3])
             self.second_player = data[4] in ["True"]
-            print(self.second_player)
             if data[5] == "255":
                 self.turn = WHITE
             else:
