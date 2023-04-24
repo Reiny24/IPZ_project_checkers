@@ -1,6 +1,7 @@
 from checkers.constants import *
 from checkers.game import Game
 from minimax.algorithm import minimax
+from checkers.piece import Piece
 
 FPS = 60
 
@@ -9,9 +10,9 @@ pygame.display.set_caption('Checkers')
 button = pygame.Rect(RESTART[1], RESTART[2], 100, 100)
 
 
-def get_row_col_from_mouse(pos, home, choose_mode, choose_save):
+def get_row_col_from_mouse(pos, board):
     x, y = pos
-    if x < 801 and not home and not choose_mode and not choose_save:
+    if x < 801 and board:
         row = y // SQUARE_SIZE
         col = x // SQUARE_SIZE
         return row, col
@@ -23,22 +24,34 @@ def main():
     run = True
     clock = pygame.time.Clock()
     game = Game(WIN)
-    home = True
-    choose_mode = False
-    choose_save = False
-    left = False
-    right = False
+    # Flags
+    home, board, choose_mode, choose_save, info = True, False, False, False, False
+    left, right = False, False
     x, y = None, None
     choose = False
+    end = False
 
     while run:
         clock.tick(FPS)
+
+        if not home and not choose_mode and not choose_save:  # Checks if game has ended
+            arr = []
+            for row in range(0, ROWS):
+                for col in range(0, COLS):
+                    if game.board.get_piece(row, col) != 0 and game.board.get_piece(row, col).color == game.turn:
+                        arr.append(game.board.get_valid_moves(Piece(row, col, game.turn), False))
+            for i in arr:
+                if i != {}:
+                    end = False
+                    break
+                else:
+                    end = True
+            if game.board.white_left == 0 or game.board.black_left == 0:
+                end = True
+
         if game.turn == BLACK and not game.second_player:
             value, new_board = minimax(game.get_board(), DIFFICULTY, BLACK, game)
             game.ai_move(new_board)
-
-        if game.winner() is not None and not home:
-            game.board.draw_winner(WIN)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -46,71 +59,86 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-                row, col = get_row_col_from_mouse(pos, home, choose_mode, choose_save)
-                if not home and not choose_mode and not choose_save:
+                row, col = get_row_col_from_mouse(pos, board)
+
+                if board:  # Game screen buttons
                     if row < 9:
                         game.select(row, col)
                     elif RESTART[1] <= row <= RESTART[1] + 100 and RESTART[2] <= col <= RESTART[2] + 100:
+                        BUTT_PRESS.play()
                         game.reset()
                     elif HOME[1] <= row <= HOME[1] + 100 and HOME[2] <= col <= HOME[2] + 100:
-                        home = True
+                        BUTT_PRESS.play()
+                        home, board = True, False
                         game.reset()
                     elif SAVE[1] <= row <= SAVE[1] + 100 and SAVE[2] <= col <= SAVE[2] + 100:
+                        BUTT_PRESS.play()
                         game.save()
-                else:
-                    if home:
-                        if 300 <= row <= 700 and 300 <= col <= 400:  # New game
-                            game.reset()
-                            home = False
-                            choose_mode = True
-                        elif 300 <= row <= 700 and 425 <= col <= 525:  # Load game
-                            # game.load_game()
-                            home = False
-                            choose_save = True
-                        elif 300 <= row <= 700 and 675 <= col <= 775:  # Quit
-                            run = False
-                    elif choose_mode:  # New game
-                        if 300 <= row <= 700 and 300 <= col <= 400:  # Player vs Player
-                            game.two_players()
-                            choose_mode = False
-                        elif 300 <= row <= 700 and 425 <= col <= 525:  # Player vs AI
-                            game.against_ai()
-                            choose_mode = False
-                        elif 300 <= row <= 700 and 550 <= col <= 650:  # Back
-                            home = True
-                            choose_mode = False
-                    elif choose_save:
-                        if 300 <= row <= 700 and 675 <= col <= 775:  # Back
-                            home = True
-                            choose_save = False
-                            x, y = None, None
-                        elif 850 <= row <= 950 and 350 <= col <= 450:
-                            right = True
-                            left = False
-                            x, y = None, None
-                        elif 50 <= row <= 150 and 350 <= col <= 450:
-                            right = False
-                            left = True
-                            x, y = None, None
-                        elif 150 <= row < 850 and 275 <= col < 525:
-                            x, y = (row - 150) // 140, (col - 275) // 62
-                        elif 350 <= row <= 650 and 550 <= col <= 650 and x is not None:
-                            choose = True
+                    else:
+                        game.selected, game.valid_moves = None, None
 
-        if home:
-            game.main_screen()
-        elif choose_mode:
-            game.choose_mode()
-        elif choose_save:
+                elif home:  # Home screen buttons
+                    if 300 <= row <= 700 and 300 <= col <= 400:  # New game
+                        game.reset()
+                        home, choose_mode = False, True
+                        BUTT_PRESS.play()
+                    elif 300 <= row <= 700 and 425 <= col <= 525:  # Load game
+                        home, choose_save = False, True
+                        BUTT_PRESS.play()
+                    elif 300 <= row <= 700 and 550 <= col <= 650:
+                        home, info = False, True
+                        BUTT_PRESS.play()
+                    elif 300 <= row <= 700 and 675 <= col <= 775:  # Quit
+                        BUTT_PRESS.play()
+                        run = False
+
+                elif choose_mode:  # New game buttons
+                    if 300 <= row <= 700 and 300 <= col <= 400:  # Player vs Player
+                        game.two_players()
+                        choose_mode, board = False, True
+                        BUTT_PRESS.play()
+                    elif 300 <= row <= 700 and 425 <= col <= 525:  # Player vs AI
+                        game.against_ai()
+                        choose_mode, board = False, True
+                        BUTT_PRESS.play()
+                    elif 300 <= row <= 700 and 550 <= col <= 650:  # Back
+                        home, choose_mode = True, False
+                        BUTT_PRESS.play()
+
+                elif choose_save:  # Choose save buttons
+                    if 300 <= row <= 700 and 675 <= col <= 775:  # Back
+                        home, choose_save = True, False
+                        x, y = None, None
+                        BUTT_PRESS.play()
+                    elif 850 <= row <= 950 and 350 <= col <= 450:  # Right arrow
+                        right, left = True, False
+                        x, y = None, None
+                        BUTT_PRESS.play()
+                    elif 50 <= row <= 150 and 350 <= col <= 450:  # Left arrow
+                        right, left = False, True
+                        x, y = None, None
+                        BUTT_PRESS.play()
+                    elif 150 <= row < 850 and 275 <= col < 525:  # Save select
+                        x, y = (row - 150) // 140, (col - 275) // 62
+                    elif 350 <= row <= 650 and 550 <= col <= 650 and x is not None:  # Start game
+                        choose, board, choose_save = True, True, True
+                        BUTT_PRESS.play()
+
+                elif info:  # Info buttons
+                    if 300 <= row <= 700 and 550 <= col <= 650:  # Back
+                        home, info = True, False
+                        BUTT_PRESS.play()
+
+        if home or choose_mode or info:  # Main screen and mode select screen
+            game.main_screen(home, choose_mode)
+        elif choose_save:  # Choose save screen
             game.choose_save(left, right, x, y, choose)
-            left = False
-            right = False
+            left, right = False, False
             if choose:
-                choose_save = False
-                choose = False
+                choose_save, choose = False, False
                 x = None
-        else:
-            game.update()
+        else:  # Board screen
+            game.update(end)
 
     pygame.quit()
 
