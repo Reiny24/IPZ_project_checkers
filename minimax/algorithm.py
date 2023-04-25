@@ -40,7 +40,7 @@ def get_all_moves(board, color):
     moves = []
 
     for piece in board.get_all_pieces(color):
-        valid_moves = board.get_valid_moves(piece, False)
+        valid_moves = board.get_valid_moves(piece)
         for move, skip in valid_moves.items():
             temp_board = deepcopy(board)
             temp_piece = temp_board.get_piece(piece.row, piece.col)

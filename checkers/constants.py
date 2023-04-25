@@ -8,6 +8,11 @@ ROWS, COLS = 8, 8
 SQUARE_SIZE = 100
 DIFFICULTY = 4
 
+# Piece properties
+PADDING = 20
+OUTLINE = 5
+RADIUS = SQUARE_SIZE // 2 - PADDING
+
 # RGB colors
 RED = (255, 0, 0)
 WHITE = (255, 255, 255)

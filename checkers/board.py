@@ -1,8 +1,6 @@
 from .constants import *
 from .piece import Piece
 
-pygame.init()
-
 
 class Board:
     def __init__(self):
@@ -10,38 +8,16 @@ class Board:
         self.white_left = self.black_left = 12
         self.white_kings = self.black_kings = 0
         self.temp = None
-        self.temp_skip = None
+        self.triple_jump = None
         self.counter = 0
         self.create_board()
 
-    @staticmethod
-    def draw_squares(win):
-        """Розмітка ігрового поля на квадрати"""
-        win.fill(BROWN)
-        win.blit(BACKGROUND, (800, 0))
-        win.blit(RESTART[0], (RESTART[1], RESTART[2]))
-        win.blit(HOME[0], (HOME[1], HOME[2]))
-        win.blit(SAVE[0], (SAVE[1], SAVE[2]))
-
-        pygame.draw.rect(win, GRAY, (800, 600, 200, 200))
-        pygame.draw.circle(win, WHITE, (875, 675), 25)
-        pygame.draw.circle(win, BLACK, (875, 750), 25)
-        for row in range(ROWS):
-            for col in range(row % 2, COLS, 2):
-                pygame.draw.rect(win, BEIGE, (row * SQUARE_SIZE, col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-
-    @staticmethod
-    def update_button(win):
-        pygame.draw.rect(win, GRAY, (RESTART[1], RESTART[2], 100, 100))
-
-    @staticmethod
-    def draw_winner(win):
-        pygame.draw.rect(win, GRAY, (800, 600, 100, 100))
-
     def evaluate(self):
+        """Returns possible position for AI"""
         return self.black_left - self.white_left + (self.black_kings * 0.5 - self.white_kings * 0.5)
 
     def get_all_pieces(self, color):
+        """Returns list of all pieces"""
         pieces = []
         for row in self.board:
             for piece in row:
@@ -50,8 +26,10 @@ class Board:
         return pieces
 
     def move(self, piece, row, col, sound):
+        """Moves the piece"""
         if type(piece) != int:
-            self.board[piece.row][piece.col], self.board[row][col] = self.board[row][col], self.board[piece.row][piece.col]
+            self.board[piece.row][piece.col], self.board[row][col] = self.board[row][col], self.board[piece.row][
+                piece.col]
             piece.move(row, col)
 
             if row == ROWS - 1 or row == 0:
@@ -65,9 +43,11 @@ class Board:
                 PIECE_MOVE.play()
 
     def get_piece(self, row, col):
+        """Returns piece in given position"""
         return self.board[row][col]
 
     def create_board(self):
+        """Creates the board"""
         for row in range(ROWS):
             self.board.append([])
             for col in range(COLS):
@@ -81,15 +61,8 @@ class Board:
                 else:
                     self.board[row].append(0)
 
-    def draw(self, win):
-        self.draw_squares(win)
-        for row in range(ROWS):
-            for col in range(COLS):
-                piece = self.board[row][col]
-                if piece != 0:
-                    piece.draw(win)
-
     def remove(self, pieces):
+        """Removes pieces"""
         for piece in pieces:
             self.board[piece.row][piece.col] = 0
             if piece != 0:
@@ -99,148 +72,98 @@ class Board:
                     self.black_left -= 1
 
     def winner(self):
-        """Повертає переможця гри"""
+        """Returns winner of the game"""
         if self.white_left <= 0:
             return BLACK
         elif self.black_left <= 0:
             return WHITE
         return None
 
-    def get_valid_moves(self, piece, pr):
-        """Повертає доступні ходи для обраної шашки"""
+    def get_valid_moves(self, piece):
+        """Returns available moves for selected chess"""
         moves = {}
         left = piece.col - 1
         right = piece.col + 1
         row = piece.row
 
         if piece.color == WHITE or piece.king:
-            moves.update(self._traverse_left(row - 1, max(row - 3, -1), -1, piece.color, left, pr))
-            moves.update(self._traverse_right(row - 1, max(row - 3, -1), -1, piece.color, right, pr))
+            moves.update(self._traverse(row - 1, max(row - 3, -1), -1, piece.color, left, False))
+            moves.update(self._traverse(row - 1, max(row - 3, -1), -1, piece.color, right, True))
         if piece.color == BLACK or piece.king:
-            moves.update(self._traverse_left(row + 1, min(row + 3, ROWS), 1, piece.color, left, pr))
-            moves.update(self._traverse_right(row + 1, min(row + 3, ROWS), 1, piece.color, right, pr))
+            moves.update(self._traverse(row + 1, min(row + 3, ROWS), 1, piece.color, left, False))
+            moves.update(self._traverse(row + 1, min(row + 3, ROWS), 1, piece.color, right, True))
         self.counter = 0
 
         return moves
 
-    def _traverse_left(self, start, stop, step, color, left, pr, skipped=None):
+    def _traverse(self, start, stop, step, color, pos, side, skipped=None):
+        """Checks valid moves on the diagonals, side = False -> Left, side = True -> Right"""
         if skipped is None:
             skipped = []
         moves = {}
         last = []
         for r in range(start, stop, step):
-            if left < 0:
+            if not side and pos < 0 or side and pos >= COLS:
                 break
 
-            current = self.board[r][left]
+            current = self.board[r][pos]
             if current == 0:
                 if skipped and not last:
                     break
                 elif skipped:
-                    moves[(r, left)] = last + skipped
+                    moves[(r, pos)] = last + skipped
                 else:
-                    moves[(r, left)] = last
+                    moves[(r, pos)] = last
 
                 if last:
                     if step == -1:
                         row = max(r - 3, 0)
                     else:
                         row = min(r + 3, ROWS)
-                    if color == BLACK:
+                    if color == WHITE and start == 3:
                         self.counter += 1
                         self.temp = moves
-                        if self.temp_skip is None:
-                            self.temp_skip = last
-                        moves.update(self._traverse_right(r + step, row, step, color, left + 1, pr, skipped=last))
-                        moves.update(self._traverse_left(r + step, row, step, color, left - 1, pr, skipped=last))
-                    else:
-                        if start == 3:
-                            self.counter += 1
-                            self.temp = moves
-                            if self.temp_skip is None:
-                                self.temp_skip = last
+                        if self.triple_jump is None:
+                            self.triple_jump = last
+                        if not side:
                             moves.update(
-                                self._traverse_right(r + step, row - 2, step, color, left + 1, pr, skipped=last))
+                                self._traverse(r + step, row - 2, step, color, pos + 1, True, skipped=last))
                             moves.update(
-                                self._traverse_left(r + step, row - 2, step, color, left - 1, pr, skipped=last))
+                                self._traverse(r + step, row - 2, step, color, pos - 1, False, skipped=last))
                         else:
-                            self.counter += 1
-                            self.temp = moves
-                            if self.temp_skip is None:
-                                self.temp_skip = last
-                            moves.update(self._traverse_right(r + step, row, step, color, left + 1, pr, skipped=last))
-                            moves.update(self._traverse_left(r + step, row, step, color, left - 1, pr, skipped=last))
+                            moves.update(
+                                self._traverse(r + step, row - 2, step, color, pos - 1, False, skipped=last))
+                            moves.update(
+                                self._traverse(r + step, row - 2, step, color, pos + 1, True, skipped=last))
+                    else:
+                        self.counter += 1
+                        self.temp = moves
+                        if self.triple_jump is None:
+                            self.triple_jump = last
+                        if not side:
+                            moves.update(self._traverse(r + step, row, step, color, pos + 1, True, skipped=last))
+                            moves.update(self._traverse(r + step, row, step, color, pos - 1, False, skipped=last))
+                        else:
+                            moves.update(
+                                self._traverse(r + step, row, step, color, pos - 1, False, skipped=last))
+                            moves.update(
+                                self._traverse(r + step, row, step, color, pos + 1, True, skipped=last))
                 break
             elif current.color == color:
                 break
             else:
                 last = [current]
 
-            left -= 1
-
-        if self.temp == moves and self.counter == 3:
-            moves[(stop - 1, left)] = last + skipped + self.temp_skip
-            self.counter = 0
-
-        return moves
-
-    def _traverse_right(self, start, stop, step, color, right, pr, skipped=None):
-        if skipped is None:
-            skipped = []
-        moves = {}
-        last = []
-        for r in range(start, stop, step):
-            if right >= COLS:
-                break
-
-            current = self.board[r][right]
-            if current == 0:
-                if skipped and not last:
-                    break
-                elif skipped:
-                    moves[(r, right)] = last + skipped
-                else:
-                    moves[(r, right)] = last
-
-                if last:
-                    if step == -1:
-                        row = max(r - 3, 0)
-                    else:
-                        row = min(r + 3, ROWS)
-                    if color == BLACK:
-                        self.counter += 1
-                        self.temp = moves
-                        if self.temp_skip is None:
-                            self.temp_skip = last
-                        moves.update(self._traverse_left(r + step, row, step, color, right - 1, pr, skipped=last))
-                        moves.update(self._traverse_right(r + step, row, step, color, right + 1, pr, skipped=last))
-                    else:
-                        if start == 3:
-                            self.counter += 1
-                            self.temp = moves
-                            if self.temp_skip is None:
-                                self.temp_skip = last
-                            moves.update(
-                                self._traverse_left(r + step, row - 2, step, color, right - 1, pr, skipped=last))
-                            moves.update(
-                                self._traverse_right(r + step, row - 2, step, color, right + 1, pr, skipped=last))
-                        else:
-                            self.counter += 1
-                            self.temp = moves
-                            if self.temp_skip is None:
-                                self.temp_skip = last
-                            moves.update(self._traverse_left(r + step, row, step, color, right - 1, pr, skipped=last))
-                            moves.update(self._traverse_right(r + step, row, step, color, right + 1, pr, skipped=last))
-                break
-            elif current.color == color:
-                break
+            if not side:
+                pos -= 1
             else:
-                last = [current]
-
-            right += 1
+                pos += 1
 
         if self.temp == moves and self.counter == 3:
-            moves[(stop - 1, right)] = last + skipped + self.temp_skip
+            moves[(stop - 1, pos)] = last + skipped + self.triple_jump
             self.counter = 0
 
         return moves
+
+    def get_board(self):
+        return self.board

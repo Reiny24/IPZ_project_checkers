@@ -3,9 +3,6 @@ import pygame
 
 
 class Piece:
-    PADDING = 20
-    OUTLINE = 5
-
     def __init__(self, row, col, color):
         self.row = row
         self.col = col
@@ -22,10 +19,15 @@ class Piece:
     def make_king(self):
         self.king = True
 
-    def draw(self, win):
-        radius = SQUARE_SIZE // 2 - self.PADDING
-        pygame.draw.circle(win, GRAY, (self.x, self.y), radius + self.OUTLINE)
-        pygame.draw.circle(win, self.color, (self.x, self.y), radius)
+    def is_king(self):
+        return self.king
+
+    def draw(self, win, selected):
+        if selected:
+            pygame.draw.circle(win, GREEN, (self.x, self.y), RADIUS + OUTLINE)
+        else:
+            pygame.draw.circle(win, GRAY, (self.x, self.y), RADIUS + OUTLINE)
+        pygame.draw.circle(win, self.color, (self.x, self.y), RADIUS)
         if self.king:
             win.blit(CROWN, (self.x - CROWN.get_width() // 2, self.y - CROWN.get_height() // 2))
 
@@ -33,6 +35,3 @@ class Piece:
         self.row = row
         self.col = col
         self.calc_pos()
-
-    def __repr__(self):
-        return str(self.color)

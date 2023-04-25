@@ -1,7 +1,8 @@
 from checkers.constants import *
 from checkers.game import Game
-from minimax.algorithm import minimax
+from interface.gui import GUI
 from checkers.piece import Piece
+from minimax.algorithm import minimax
 
 FPS = 60
 
@@ -23,13 +24,17 @@ def get_row_col_from_mouse(pos, board):
 def main():
     run = True
     clock = pygame.time.Clock()
-    game = Game(WIN)
+    game = Game()
+    gui = GUI(WIN)
     # Flags
     home, board, choose_mode, choose_save, info = True, False, False, False, False
     left, right = False, False
     x, y = None, None
     choose = False
     end = False
+    select = False
+    selected_row, selected_col = None, None
+    saved = False
 
     while run:
         clock.tick(FPS)
@@ -39,7 +44,7 @@ def main():
             for row in range(0, ROWS):
                 for col in range(0, COLS):
                     if game.board.get_piece(row, col) != 0 and game.board.get_piece(row, col).color == game.turn:
-                        arr.append(game.board.get_valid_moves(Piece(row, col, game.turn), False))
+                        arr.append(game.board.get_valid_moves(Piece(row, col, game.turn)))
             for i in arr:
                 if i != {}:
                     end = False
@@ -64,6 +69,8 @@ def main():
                 if board:  # Game screen buttons
                     if row < 9:
                         game.select(row, col)
+                        selected_row, selected_col = row, col
+                        select = True
                     elif RESTART[1] <= row <= RESTART[1] + 100 and RESTART[2] <= col <= RESTART[2] + 100:
                         BUTT_PRESS.play()
                         game.reset()
@@ -74,6 +81,7 @@ def main():
                     elif SAVE[1] <= row <= SAVE[1] + 100 and SAVE[2] <= col <= SAVE[2] + 100:
                         BUTT_PRESS.play()
                         game.save()
+                        saved = True
                     else:
                         game.selected, game.valid_moves = None, None
 
@@ -130,15 +138,22 @@ def main():
                         BUTT_PRESS.play()
 
         if home or choose_mode or info:  # Main screen and mode select screen
-            game.main_screen(home, choose_mode)
+            gui.main_screen(home, choose_mode)
         elif choose_save:  # Choose save screen
-            game.choose_save(left, right, x, y, choose)
+            gui.choose_save(game.get_saves(), game.get_saved_matrix(gui.get_page()), left, right, x, y)
             left, right = False, False
             if choose:
+                game.load_game(gui.get_page(), x, y)
                 choose_save, choose = False, False
                 x = None
         else:  # Board screen
-            game.update(end)
+            if select:
+                gui.update(game.get_board_to_draw(), game.get_board(), game.get_valid_moves(), game.get_turn(), game.get_selected(), end,
+                           selected_row, selected_col, saved, game.get_filename())
+            else:
+                gui.update(game.get_board_to_draw(), game.get_board(), game.get_valid_moves(), game.get_turn(), game.get_selected(), end, None,
+                           None, saved, game.get_filename())
+            saved = False
 
     pygame.quit()
 
