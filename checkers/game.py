@@ -164,3 +164,5 @@ class Game:
                 length = 0
                 pos += 1
         return arr
+
+#
