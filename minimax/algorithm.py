@@ -29,7 +29,7 @@ def minimax(position, depth, max_player, game):
 
 
 def simulate_move(piece, move, board, skip):
-    board.move(piece, move[0], move[1])
+    board.move(piece, move[0], move[1], False)
     if skip:
         board.remove(skip)
 
