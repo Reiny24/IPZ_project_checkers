@@ -148,11 +148,11 @@ def main():
                 x = None
         else:  # Board screen
             if select:
-                gui.update(game.get_board_to_draw(), game.get_board(), game.get_valid_moves(), game.get_turn(), game.get_selected(), end,
-                           selected_row, selected_col, saved, game.get_filename())
+                gui.update(game.get_board_to_draw(), game.get_board(), game.get_valid_moves(), game.get_turn(),
+                           game.get_selected(), end, selected_row, selected_col, saved, game.get_filename())
             else:
-                gui.update(game.get_board_to_draw(), game.get_board(), game.get_valid_moves(), game.get_turn(), game.get_selected(), end, None,
-                           None, saved, game.get_filename())
+                gui.update(game.get_board_to_draw(), game.get_board(), game.get_valid_moves(), game.get_turn(),
+                           game.get_selected(), end, None, None, saved, game.get_filename())
             saved = False
 
     pygame.quit()

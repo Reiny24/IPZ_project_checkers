@@ -1,5 +1,4 @@
 from .constants import *
-import pygame
 
 
 class Piece:
@@ -21,15 +20,6 @@ class Piece:
 
     def is_king(self):
         return self.king
-
-    def draw(self, win, selected):
-        if selected:
-            pygame.draw.circle(win, GREEN, (self.x, self.y), RADIUS + OUTLINE)
-        else:
-            pygame.draw.circle(win, GRAY, (self.x, self.y), RADIUS + OUTLINE)
-        pygame.draw.circle(win, self.color, (self.x, self.y), RADIUS)
-        if self.king:
-            win.blit(CROWN, (self.x - CROWN.get_width() // 2, self.y - CROWN.get_height() // 2))
 
     def move(self, row, col):
         self.row = row
