@@ -1,5 +1,5 @@
-from .constants import *
-from .piece import Piece
+from checkers.constants import *
+from checkers.piece import Piece
 
 
 class Board:
@@ -24,7 +24,7 @@ class Board:
                 else:
                     self.board[row].append(0)
 
-    def __traverse(self, start, stop, step, color, pos, side, skipped=None):
+    def __traverse(self, start, stop, step, color, pos, side, king, skipped=None):
         """Checks valid moves on the diagonals, side = False -> Left, side = True -> Right"""
         if skipped is None:
             skipped = []
@@ -48,26 +48,41 @@ class Board:
                         row = max(r - 3, 0)
                     else:
                         row = min(r + 3, ROWS)
-                    if color == WHITE and start == 3:
+                    if color == BLACK and start == 3 or color == WHITE and king or color != WHITE and start != 3 or \
+                            color != BLACK and not king and start != 3:
                         if not side:
                             moves.update(
-                                self.__traverse(r + step, row - 2, step, color, pos + 1, True, skipped=last))
-                            moves.update(
-                                self.__traverse(r + step, row - 2, step, color, pos - 1, False, skipped=last))
+                                self.__traverse(r + step, row, step, color, pos - 1, False, king, skipped=last))
+                            moves.update(self.__traverse(r + step, row, step, color, pos + 1, True, king, skipped=last))
+
                         else:
                             moves.update(
-                                self.__traverse(r + step, row - 2, step, color, pos - 1, False, skipped=last))
+                                self.__traverse(r + step, row, step, color, pos + 1, True, king, skipped=last))
                             moves.update(
-                                self.__traverse(r + step, row - 2, step, color, pos + 1, True, skipped=last))
-                    else:
+                                self.__traverse(r + step, row, step, color, pos - 1, False, king, skipped=last))
+                    # elif color == WHITE or color == BLACK and king:
+                    #     print(1)
+                    #     if not side:
+                    #         moves.update(
+                    #             self.__traverse(r + step, row - 2, step, color, pos + 1, True, king, skipped=last))
+                    #         moves.update(
+                    #             self.__traverse(r + step, row - 2, step, color, pos - 1, False, king, skipped=last))
+                    #     else:
+                    #         moves.update(
+                    #             self.__traverse(r + step, row - 2, step, color, pos - 1, False, king, skipped=last))
+                    #         moves.update(
+                    #             self.__traverse(r + step, row - 2, step, color, pos + 1, True, king, skipped=last))
+                    if color == WHITE and start == 3 or color == BLACK and king and start == 3:
                         if not side:
-                            moves.update(self.__traverse(r + step, row, step, color, pos + 1, True, skipped=last))
-                            moves.update(self.__traverse(r + step, row, step, color, pos - 1, False, skipped=last))
+                            moves.update(
+                                self.__traverse(r + step, row - 2, step, color, pos + 1, True, king, skipped=last))
+                            moves.update(
+                                self.__traverse(r + step, row - 2, step, color, pos - 1, False, king, skipped=last))
                         else:
                             moves.update(
-                                self.__traverse(r + step, row, step, color, pos - 1, False, skipped=last))
+                                self.__traverse(r + step, row - 2, step, color, pos - 1, False, king, skipped=last))
                             moves.update(
-                                self.__traverse(r + step, row, step, color, pos + 1, True, skipped=last))
+                                self.__traverse(r + step, row - 2, step, color, pos + 1, True, king, skipped=last))
                 break
             elif current.color == color:
                 break
@@ -99,18 +114,6 @@ class Board:
         if type(piece) != int:
             self.board[piece.row][piece.col], self.board[row][col] = self.board[row][col], self.board[piece.row][
                 piece.col]
-            if abs(piece.row - row) == 6:
-                print(piece.row, piece.col, ":", row, col)
-                if abs(piece.row - row) == 6:
-                    if row - piece.row > 0:
-                        r_row = piece.row + 1
-                    else:
-                        r_row = piece.row - 1
-                    if col - piece.col > 0:
-                        r_col = piece.col + 1
-                    else:
-                        r_col = piece.col - 1
-                    self.remove([self.get_piece(r_row, r_col)])
             piece.move(row, col)
 
             if row == ROWS - 1 or row == 0:
@@ -153,11 +156,11 @@ class Board:
         row = piece.row
 
         if piece.color == WHITE or piece.king:
-            moves.update(self.__traverse(row - 1, max(row - 3, -1), -1, piece.color, left, False))
-            moves.update(self.__traverse(row - 1, max(row - 3, -1), -1, piece.color, right, True))
+            moves.update(self.__traverse(row - 1, max(row - 3, -1), -1, piece.color, left, False, piece.king))
+            moves.update(self.__traverse(row - 1, max(row - 3, -1), -1, piece.color, right, True, piece.king))
         if piece.color == BLACK or piece.king:
-            moves.update(self.__traverse(row + 1, min(row + 3, ROWS), 1, piece.color, left, False))
-            moves.update(self.__traverse(row + 1, min(row + 3, ROWS), 1, piece.color, right, True))
+            moves.update(self.__traverse(row + 1, min(row + 3, ROWS), 1, piece.color, left, False, piece.king))
+            moves.update(self.__traverse(row + 1, min(row + 3, ROWS), 1, piece.color, right, True, piece.king))
 
         return moves
 

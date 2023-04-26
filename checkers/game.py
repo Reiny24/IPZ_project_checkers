@@ -1,9 +1,7 @@
 import os
-
 import numpy
-
 from checkers.board import Board
-from .constants import *
+from checkers.constants import *
 
 
 class Game:
@@ -26,12 +24,42 @@ class Game:
         """Moves pieces on the game board"""
         piece = self.board.get_piece(row, col)
         if self.selected and piece == 0 and (row, col) in self.valid_moves:
+            king = self.selected.is_king()
+            color = self.selected.color
+            old_row, old_col = self.selected.row, self.selected.col
             self.board.move(self.selected, row, col, sound)
             skipped = self.valid_moves[(row, col)]
             if skipped:
+                # Triple jump fix
+                if abs(old_row - row) == 6:
+                    r_row, r_col = 0, 0
+                    if abs(old_col - col) > 2:
+                        if row - old_row > 0:
+                            r_row = old_row + 1
+                        else:
+                            r_row = old_row - 1
+                        if col - old_col > 0:
+                            r_col = old_col + 1
+                        else:
+                            r_col = old_col - 1
+                        if self.selected.color != self.board.get_piece(r_row, r_col).color:
+                            self.board.remove([self.board.get_piece(r_row, r_col)])
+                    else:
+                        if row - old_row > 0:
+                            r_row = old_row + 1
+                        else:
+                            r_row = old_row - 1
+                        if col - old_col > 0 and not king or col - old_col > 0 and king and color == BLACK:
+                            r_col = old_col + 1
+                        elif col - old_col <= 0 and not king or col - old_col <= 0 and king and color == BLACK:
+                            r_col = old_col - 1
+                        if col - old_col > 0 and king and color == WHITE:
+                            r_col = old_col - 1
+                        elif col - old_col <= 0 and king and color == WHITE:
+                            r_col = old_col + 1
+                        self.board.remove([self.board.get_piece(r_row, r_col)])
                 self.board.remove(skipped)
             self.__change_turn()
-            self.selected = None
         else:
             return False
 
@@ -63,7 +91,6 @@ class Game:
     def load_game(self, page, x, y):
         """Load selected game"""
         saved_game = self.get_saved_matrix(page)[x][y]
-        print(saved_game)
         if len(os.listdir(r".\saved_games")) > 0:
 
             with open(fr".\saved_games\{saved_game}\{saved_game}", "r") as file:
@@ -164,5 +191,3 @@ class Game:
                 length = 0
                 pos += 1
         return arr
-
-#

@@ -1,4 +1,4 @@
-from .constants import *
+from checkers.constants import *
 
 
 class Piece:
